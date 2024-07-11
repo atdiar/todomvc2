@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/atdiar/particleui"
-	"github.com/atdiar/particleui/drivers/js"
+	ui "github.com/atdiar/particleui"
+	doc "github.com/atdiar/particleui/drivers/js"
 )
 
 type TodoCount struct {
@@ -17,16 +17,16 @@ func (t TodoCount) SetCount(count int) TodoCount {
 	return t
 }
 
-func TodoCountFromRef(ref *ui.Element) TodoCount{
+func TodoCountFromRef(ref *ui.Element) TodoCount {
 	return TodoCount{ref}
 }
 
-func NewTodoCount(d doc.Document, id string, options ...string) TodoCount {
+func NewTodoCount(d *doc.Document, id string, options ...string) TodoCount {
 	return TodoCount{newtodocount(d, id, options...)}
 }
 
-func newtodocount (document doc.Document, id string, options ...string) *ui.Element {
-	s := document.Span.WithID(id,options...)
+func newtodocount(document *doc.Document, id string, options ...string) *ui.Element {
+	s := document.Span.WithID(id, options...)
 	s.AsElement().Watch("ui", "count", s.AsElement(), ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
 		n, ok := evt.NewValue().(ui.Number)
 		if !ok {
@@ -37,7 +37,7 @@ func newtodocount (document doc.Document, id string, options ...string) *ui.Elem
 		if nn > 1 {
 			i = "items"
 		}
-		htmlstr := strings.Join([]string{"<strong>",strconv.Itoa(nn),"<strong>"," ",i," left"},"")
+		htmlstr := strings.Join([]string{"<strong>", strconv.Itoa(nn), "<strong>", " ", i, " left"}, "")
 		doc.SetInnerHTML(s.AsElement(), htmlstr)
 		return false
 	}).RunASAP())

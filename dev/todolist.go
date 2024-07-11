@@ -2,7 +2,7 @@ package main
 
 import (
 	. "github.com/atdiar/particleui"
-	"github.com/atdiar/particleui/drivers/js"
+	doc "github.com/atdiar/particleui/drivers/js"
 )
 
 type TodosListElement struct {
@@ -27,20 +27,16 @@ func (t TodosListElement) SetList(tdl List) TodosListElement {
 	return t
 }
 
-
-
-
-func TodoListFromRef(ref *Element) TodosListElement{
+func TodoListFromRef(ref *Element) TodosListElement {
 	return TodosListElement{ref}
 }
 
-
-func(t TodosListElement) AsViewElement() ViewElement{
+func (t TodosListElement) AsViewElement() ViewElement {
 	return ViewElement{t.AsElement()}
 }
 
-func displayWhen(filter string) func(Value) bool{
-	return func (v Value)  bool{
+func displayWhen(filter string) func(Value) bool {
+	return func(v Value) bool {
 		o := v.(Todo)
 		cplte, _ := o.Get("completed")
 		complete := cplte.(Bool)
@@ -58,54 +54,52 @@ func displayWhen(filter string) func(Value) bool{
 			}
 			return true
 		}
-		return true	
+		return true
 	}
 }
 
-
-
-func newTodoListElement(document doc.Document, id string, options ...string) *Element {
+func newTodoListElement(document *doc.Document, id string, options ...string) *Element {
 	t := document.Ul.WithID(id, options...)
 	doc.AddClass(t.AsElement(), "todo-list")
 
 	tview := NewViewElement(t.AsElement(), NewView("all"), NewView("active"), NewView("completed"))
-	t.OnRouterMounted(func(r *Router){
-		names:= NewList(String("all"), String("active"), String("completed")).Commit()
-		links:= NewList(
+	t.OnRouterMounted(func(r *Router) {
+		names := NewList(String("all"), String("active"), String("completed")).Commit()
+		links := NewList(
 			String(r.NewLink("all").URI()),
 			String(r.NewLink("active").URI()),
 			String(r.NewLink("completed").URI()),
 		).Commit()
-		filterslist:=NewObject()
-		filterslist.Set("names",names)
-		filterslist.Set("urls",links)
+		filterslist := NewObject()
+		filterslist.Set("names", names)
+		filterslist.Set("urls", links)
 
-		t.AsElement().SetUI("filterslist",filterslist.Commit())
+		t.AsElement().SetDataSetUI("filterslist", filterslist.Commit())
 	})
 
-	tview.AsElement().Watch("ui","filter", tview,NewMutationHandler(func(evt MutationEvent)bool{
+	tview.AsElement().Watch("ui", "filter", tview, NewMutationHandler(func(evt MutationEvent) bool {
 		evt.Origin().TriggerEvent("renderlist")
 		return false
-	}))	
+	}))
 
-	tview.AsElement().Watch("ui","todoslist", tview,NewMutationHandler(func(evt MutationEvent)bool{
-		newlist:= evt.NewValue().(List)
+	tview.AsElement().Watch("ui", "todoslist", tview, NewMutationHandler(func(evt MutationEvent) bool {
+		newlist := evt.NewValue().(List)
 
 		for _, v := range newlist.UnsafelyUnwrap() {
-			o:= v.(Todo)
-			ntd, ok := FindTodoElement(doc.GetDocument(evt.Origin()),o)
+			o := v.(Todo)
+			ntd, ok := FindTodoElement(doc.GetDocument(evt.Origin()), o)
 			if !ok {
 				ntd = TodosListElement{evt.Origin()}.NewTodo(o)
-			}else{
-				ntd.SetDataSetUI("todo",o) // TODO defer ?
-			}	
+			} else {
+				ntd.SetDataSetUI("todo", o)
+			}
 		}
 
 		//TodosListElement{evt.Origin()}.signalUpdate()
 		evt.Origin().TriggerEvent("renderlist")
 		return false
 	}))
-	
+
 	tview.OnActivated("all", NewMutationHandler(func(evt MutationEvent) bool {
 		evt.Origin().SetDataSetUI("filter", String("all"))
 		doc.GetDocument(evt.Origin()).Window().SetTitle("TODOMVC-all")
@@ -124,9 +118,8 @@ func newTodoListElement(document doc.Document, id string, options ...string) *El
 	}))
 
 	t.WatchEvent("renderlist", t, NewMutationHandler(func(evt MutationEvent) bool {
-		t:= evt.Origin()
-		doc.DEBUG("rendering list")
-		
+		t := evt.Origin()
+
 		// Retrieve current filter
 		filterval, ok := t.Get("ui", "filter")
 		var filter string
@@ -135,22 +128,22 @@ func newTodoListElement(document doc.Document, id string, options ...string) *El
 		} else {
 			filter = string(filterval.(String))
 		}
-		
+
 		var todos List
-		tlist, ok:= t.Get("ui", "todoslist")
-		if ok{
+		tlist, ok := t.Get("ui", "todoslist")
+		if ok {
 			todos = tlist.(List)
-		} else{
+		} else {
 			todos = NewList().Commit()
 		}
 
-		length:= len(todos.UnsafelyUnwrap())
-		var newChildren = make([]*Element, length)
+		length := len(todos.UnsafelyUnwrap())
+		var newChildren = make([]*Element, 0, length)
 
 		todos.Range(func(i int, v Value) bool {
-			o:= v.(Todo)
-			if displayWhen(filter)(o){
-				ntd, ok := FindTodoElement(doc.GetDocument(evt.Origin()),o)
+			o := v.(Todo)
+			if displayWhen(filter)(o) {
+				ntd, ok := FindTodoElement(doc.GetDocument(evt.Origin()), o)
 				if !ok {
 					panic("todo not found for rendering...")
 				}
@@ -160,22 +153,20 @@ func newTodoListElement(document doc.Document, id string, options ...string) *El
 		})
 
 		t.SetChildren(newChildren...)
-		DEBUG(newChildren)
-		
+
 		return false
 	}))
-	
+
 	return t.AsElement()
 }
 
-func NewTodoList(d doc.Document, id string, options ...string) TodosListElement {
-	return TodosListElement{newTodoListElement(d,id, options...)}
+func NewTodoList(d *doc.Document, id string, options ...string) TodosListElement {
+	return TodosListElement{newTodoListElement(d, id, options...)}
 }
 
+func (t TodosListElement) NewTodo(o Todo) TodoElement {
 
-func(t TodosListElement) NewTodo(o Todo) TodoElement{
-	
-	ntd := newTodoElement(doc.GetDocument(t.AsElement()),o)
+	ntd := newTodoElement(doc.GetDocument(t.AsElement()), o)
 	id, _ := o.Get("id")
 	idstr := id.(String)
 
@@ -190,15 +181,15 @@ func(t TodosListElement) NewTodo(o Todo) TodoElement{
 
 		newval := evt.NewValue()
 
-		rawlist:= tdl.UnsafelyUnwrap()
+		rawlist := tdl.UnsafelyUnwrap()
 
 		for i, rawtodo := range rawlist {
 			todo := rawtodo.(Todo)
 			oldid, _ := todo.Get("id")
 
 			if oldid == idstr {
-				rawlist[i]=newval
-				t.SetList(NewListFrom(rawlist))			
+				rawlist[i] = newval
+				t.SetList(NewListFrom(rawlist))
 				break
 			}
 		}
@@ -215,18 +206,18 @@ func(t TodosListElement) NewTodo(o Todo) TodoElement{
 		}
 		ntdl := NewList()
 		var i int
-		
+
 		for _, rawtodo := range tdl.UnsafelyUnwrap() {
 			todo := rawtodo.(Todo)
 			oldid, _ := todo.Get("id")
 			if oldid == idstr {
-				t,ok:= FindTodoElement(doc.GetDocument(evt.Origin()),rawtodo.(Todo))
-				if ok{
+				t, ok := FindTodoElement(doc.GetDocument(evt.Origin()), rawtodo.(Todo))
+				if ok {
 					Delete(t.AsElement())
 				}
 				continue
 			}
-			ntdl= ntdl.Append(rawtodo)
+			ntdl = ntdl.Append(rawtodo)
 			i++
 		}
 

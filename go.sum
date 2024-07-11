@@ -1,0 +1,7 @@
+github.com/atdiar/particleui v0.0.0-20220608232718-665d9f33b3c9 h1:0ICClcLjccBTk/FbqbiyFReRSZ37naNWpgZeQ6JmT5E=
+github.com/atdiar/particleui v0.0.0-20220608232718-665d9f33b3c9/go.mod h1:exOkQ0uHKrLBBL+hgLFAHgQadYqjkW0XPv7C815RTfY=
+github.com/atdiar/particleui/drivers/js v0.0.0-20220608232718-665d9f33b3c9 h1:+Knr/fCVqqSoquWZjaar5VXzyp2yL6j6H6BsK/TaqyM=
+github.com/atdiar/particleui/drivers/js v0.0.0-20220608232718-665d9f33b3c9/go.mod h1:wkPCDAXacKt4l7w/IIflNrC0RDyGieYgvZ3kOigfQNM=
+github.com/atdiar/particleui/drivers/js/declarative v0.0.0-20230328104714-567a015a7470 h1:6uwH33fu1DmcFIMM32+KJPPYDF4Ppoou8XKPT76LiCY=
+github.com/atdiar/particleui/drivers/js/declarative v0.0.0-20230328104714-567a015a7470/go.mod h1:wB3hlTlYgNBAkGTAXy5PPivqwTkO7VBcZkt12UlkwR8=
+golang.org/x/net v0.25.0 h1:d/OCCoBEUq33pjydKrGQhw7IlUPI2Oylr+8qLx49kac=

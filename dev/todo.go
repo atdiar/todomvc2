@@ -2,11 +2,11 @@ package main
 
 import (
 	"math/rand"
-	"time"
 	"strings"
+	"time"
 
-	"github.com/atdiar/particleui"
-	"github.com/atdiar/particleui/drivers/js"
+	ui "github.com/atdiar/particleui"
+	doc "github.com/atdiar/particleui/drivers/js"
 	. "github.com/atdiar/particleui/drivers/js/declarative"
 )
 
@@ -23,8 +23,19 @@ func newIDgenerator(charlen int, seed int64) func() string {
 	}
 }
 
+var NewID func() string
 
-var NewID = newIDgenerator(16,time.Now().UnixNano())
+func init() {
+	var seed int64
+	if doc.HMRMode != "false" || doc.SSRMode != "false" {
+		seed = 7823949678145108
+		print("HMRMode or SSRMode is enabled. Using fixed seed for id generation") // DEBUG
+	} else {
+		seed = time.Now().UnixNano()
+	}
+
+	NewID = newIDgenerator(16, seed)
+}
 
 type Todo = ui.Object
 
@@ -40,8 +51,7 @@ type TodoElement struct {
 	*ui.Element
 }
 
-
-func FindTodoElement(d doc.Document, t Todo) (TodoElement, bool) {
+func FindTodoElement(d *doc.Document, t Todo) (TodoElement, bool) {
 	todoid, ok := t.Get("id")
 	if !ok {
 		panic("wrong todo format! id is required")
@@ -58,46 +68,42 @@ func FindTodoElement(d doc.Document, t Todo) (TodoElement, bool) {
 	return TodoElement{todo}, false
 }
 
-func newtodo(document doc.Document, id string, options ...string) *ui.Element {
+func newtodo(document *doc.Document, id string, options ...string) *ui.Element {
 
 	var li *ui.Element
 	var i *ui.Element
 	var l *ui.Element
 	var b *ui.Element
 
-	t:= E(document.Li.WithID(id,options...),
-			Ref(&li),
-			Children(
-				E(document.Div.WithID(id+"-view"),
-					Class("view"),
-					Children(
-						E(document.Input.WithID(id+"-completed","checkbox"),
-							Ref(&i),
-							Class("toggle"),
-						),
-						E(document.Label(),
-							Ref(&l),
-						),
-						E(document.Button.WithID(id+"-btn","button"),
-							Ref(&b),
-							Class("destroy"),
-						),
+	t := E(document.Li.WithID(id, options...),
+		Ref(&li),
+		Children(
+			E(document.Div.WithID(id+"-view"),
+				Class("view"),
+				Children(
+					E(document.Input.WithID(id+"-completed", "checkbox"),
+						Ref(&i),
+						Class("toggle"),
+					),
+					E(document.Label(),
+						Ref(&l),
+					),
+					E(document.Button.WithID(id+"-btn", "button"),
+						Ref(&b),
+						Class("destroy"),
 					),
 				),
 			),
-		)
-
-
-
+		),
+	)
 
 	edit := document.Input.WithID(id+"-edit", "")
 	doc.AddClass(edit.AsElement(), "edit")
 
 	edit.AsElement().ShareLifetimeOf(li.AsElement())
 
+	li.Watch("ui", "todo", li, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
 
-	li.Watch("ui","todo", li, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
-	
 		t := evt.NewValue().(Todo)
 
 		title, _ := t.Get("title")
@@ -109,7 +115,6 @@ func newtodo(document doc.Document, id string, options ...string) *ui.Element {
 
 		doc.LabelElement{l}.SetText(string(titlestr))
 		edit.SetUI("value", titlestr)
-		
 
 		todocomplete, ok := t.Get("completed")
 		if !ok {
@@ -122,16 +127,11 @@ func newtodo(document doc.Document, id string, options ...string) *ui.Element {
 		} else {
 			doc.RemoveClass(li.AsElement(), "completed")
 		}
-	
+
 		i.SetUI("checked", todocompletebool)
-		
 
 		return false
 	}))
-
-	
-
-	
 
 	li.WatchEvent("toggle", li, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
 		res, ok := evt.Origin().Get("ui", "todo")
@@ -174,8 +174,8 @@ func newtodo(document doc.Document, id string, options ...string) *ui.Element {
 	}))
 
 	li.WatchEvent("edit", li, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
-		rt, ok:= li.GetData("todo")
-		if !ok{
+		rt, ok := li.GetData("todo")
+		if !ok {
 			panic("todo data should be present")
 		}
 		todo := rt.(Todo)
@@ -226,8 +226,8 @@ func newtodo(document doc.Document, id string, options ...string) *ui.Element {
 		}
 		if v := val.(ui.String); v == "Enter" {
 			evt.PreventDefault()
-			uival,ok:= evt.CurrentTarget().Get("ui","value")
-			if !ok{
+			uival, ok := evt.CurrentTarget().Get("ui", "value")
+			if !ok {
 				panic("value should be present")
 			}
 			evt.CurrentTarget().SetData("value", uival)
@@ -273,7 +273,7 @@ func newtodo(document doc.Document, id string, options ...string) *ui.Element {
 
 }
 
-func newTodoElement(d doc.Document, t Todo) TodoElement {
+func newTodoElement(d *doc.Document, t Todo) TodoElement {
 	todoid, ok := t.Get("id")
 	if !ok {
 		panic("missing todo id")

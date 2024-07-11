@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/atdiar/particleui"
-	"github.com/atdiar/particleui/drivers/js"
+	ui "github.com/atdiar/particleui"
+	doc "github.com/atdiar/particleui/drivers/js"
 	. "github.com/atdiar/particleui/drivers/js/declarative"
 )
 
-func App() doc.Document {
+func App() *doc.Document {
 
 	var AppSection *ui.Element
 	var MainSection *ui.Element
@@ -20,14 +20,18 @@ func App() doc.Document {
 
 	toggleallhandler := ui.NewEventHandler(func(evt ui.Event) bool {
 		var ischecked bool
-		_, ok := evt.Target().Get("ui", "checked")
+		v, ok := evt.Target().Get("ui", "checked")
 		if !ok {
 			chk := doc.GetAttribute(evt.Target(), "checked")
 			if chk != "null" {
 				ischecked = true
 			}
-			evt.Target().SyncUISetData("checked", ui.Bool(!ischecked))
+		} else {
+			ischecked = v.(ui.Bool).Bool()
 		}
+
+		evt.Target().SyncUISetData("checked", ui.Bool(!ischecked))
+
 		return false
 	})
 
@@ -112,7 +116,6 @@ func App() doc.Document {
 
 	// 4. Watch for new todos to insert
 	AppSection.WatchEvent("newtodo", todosinput.AsElement(), ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
-		ui.DEBUG("newtodo event", evt.NewValue())
 		tlist := TodoListFromRef(TodosList)
 		tdl := tlist.GetList()
 
@@ -145,8 +148,6 @@ func App() doc.Document {
 	}))
 
 	AppSection.Watch("ui", "todoslist", TodosList, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
-		doc.DEBUG("todoslist changed")
-		doc.DEBUG(evt.NewValue())
 		tlist := TodoListFromRef(TodosList)
 		l := tlist.GetList()
 
@@ -185,11 +186,9 @@ func App() doc.Document {
 		}
 
 		if allcomplete {
-			doc.InputModifier.Checked(true)(ToggleAllInput.AsElement())
-			// equivalent to setting the UI via  ToggleAllInput.AsElement().SetDataSetUI("checked", ui.Bool(true))
+			ToggleAllInput.AsElement().SetUI("checked", ui.Bool(true))
 		} else {
-			doc.InputModifier.Checked(false)(ToggleAllInput.AsElement())
-			// equivalent to setting the UI via ToggleAllInput.AsElement().SetDataSetUI("checked", ui.Bool(false))
+			ToggleAllInput.AsElement().SetUI("checked", ui.Bool(false))
 		}
 		return false
 	}))
@@ -204,7 +203,7 @@ func App() doc.Document {
 
 		for i, todo := range tdl.UnsafelyUnwrap() {
 			t := todo.(Todo)
-			t = t.MakeCopy().Set("completed", !status).Commit()
+			t = t.MakeCopy().Set("completed", status).Commit()
 			ntdl.Set(i, t)
 		}
 		tlist.SetList(ntdl.Commit())
@@ -224,7 +223,7 @@ func App() doc.Document {
 		return false
 	}).RunASAP())
 
-	AppSection.Watch("ui", "filterslist", TodosList, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
+	AppSection.Watch("data", "filterslist", TodosList, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
 		FilterList.AsElement().SetUI("filterslist", evt.NewValue())
 		return false
 	}).RunASAP())
