@@ -2,11 +2,10 @@ package main
 
 import (
 	ui "github.com/atdiar/particleui"
-	doc "github.com/atdiar/particleui/drivers/js"
-	. "github.com/atdiar/particleui/drivers/js/declarative"
+	. "github.com/atdiar/particleui/drivers/js"
 )
 
-func App() *doc.Document {
+func App() *Document {
 
 	var AppSection *ui.Element
 	var MainSection *ui.Element
@@ -20,17 +19,22 @@ func App() *doc.Document {
 
 	toggleallhandler := ui.NewEventHandler(func(evt ui.Event) bool {
 		var ischecked bool
-		v, ok := evt.Target().Get("ui", "checked")
+		v, ok := evt.Target().Get("data", "checked")
 		if !ok {
-			chk := doc.GetAttribute(evt.Target(), "checked")
-			if chk != "null" {
-				ischecked = true
+			nativeinput, ok := JSValue(evt.Target())
+			if !ok {
+				panic("no js value")
 			}
+			ischecked = nativeinput.Get("checked").Bool()
+			evt.Target().SetUI("checked", ui.Bool(ischecked))
+
 		} else {
-			ischecked = v.(ui.Bool).Bool()
+			ischecked = !v.(ui.Bool).Bool()
+			evt.Target().SetUI("checked", ui.Bool(ischecked))
 		}
 
-		evt.Target().SyncUISetData("checked", ui.Bool(!ischecked))
+		evt.Target().SyncUISetData("checked", ui.Bool(ischecked))
+		evt.Target().TriggerEvent("toggleall", ui.Bool(ischecked))
 
 		return false
 	})
@@ -41,8 +45,7 @@ func App() *doc.Document {
 		return false
 	})
 
-	document := doc.NewDocument("Todo-App", doc.EnableScrollRestoration())
-	document.EnableWasm()
+	document := NewDocument("Todo-App", EnableScrollRestoration())
 
 	document.Head().AppendChild(
 		E(document.Link.WithID("todocss").
@@ -53,7 +56,7 @@ func App() *doc.Document {
 
 	E(document.Body(),
 		Children(
-			E(doc.AriaChangeAnnouncerFor(document)),
+			E(AriaChangeAnnouncerFor(document)),
 			E(document.Section.WithID("todoapp"),
 				Ref(&AppSection),
 				Class("todoapp"),
@@ -72,13 +75,13 @@ func App() *doc.Document {
 						Ref(&MainSection),
 						Class("main"),
 						Children(
-							E(document.Input.WithID("toggle-all", "checkbox", doc.EnableLocalPersistence()),
+							E(document.Input.WithID("toggle-all", "checkbox"),
 								Ref(&ToggleAllInput),
 								Class("toggle-all"),
 								Listen("click", toggleallhandler),
 							),
 							E(document.Label().For(&ToggleAllInput)),
-							E(NewTodoList(document, "todo-list", doc.EnableLocalPersistence()),
+							E(NewTodoList(document, "todo-list", EnableLocalPersistence()),
 								Ref(&TodosList),
 								InitRouter(Hijack("/", "/all")),
 							),
@@ -104,7 +107,7 @@ func App() *doc.Document {
 					E(document.Paragraph().SetText("Double-click to edit a todo")),
 					E(document.Paragraph().SetText("Created with: "),
 						Children(
-							E(document.Anchor().SetHREF("http://github.com/atdiar/particleui").SetText("Zui")),
+							E(document.Anchor().SetHREF("https://zui.dev").SetText("zui")),
 						),
 					),
 				),
@@ -147,14 +150,32 @@ func App() *doc.Document {
 		return false
 	}))
 
+	AppSection.WatchEvent("toggleall", ToggleAllInput, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
+		status := evt.NewValue().(ui.Bool)
+
+		tlist := TodoListFromRef(TodosList)
+
+		tdl := tlist.GetList()
+		ntdl := tdl.MakeCopy()
+
+		for i, todo := range tdl.UnsafelyUnwrap() {
+			t := todo.(Todo)
+			t = t.MakeCopy().Set("completed", status).Commit()
+			ntdl.Set(i, t)
+		}
+		tlist.SetList(ntdl.Commit())
+
+		return false
+	}))
+
 	AppSection.Watch("ui", "todoslist", TodosList, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
 		tlist := TodoListFromRef(TodosList)
 		l := tlist.GetList()
 
 		if len(l.UnsafelyUnwrap()) == 0 {
-			doc.SetInlineCSS(MainFooter.AsElement(), "display:none")
+			SetInlineCSS(MainFooter.AsElement(), "display:none")
 		} else {
-			doc.SetInlineCSS(MainFooter.AsElement(), "display:block")
+			SetInlineCSS(MainFooter.AsElement(), "display:block")
 		}
 
 		countcomplete := 0
@@ -180,34 +201,16 @@ func App() *doc.Document {
 
 		if itemsleft > 0 {
 			allcomplete = false
-			doc.SetInlineCSS(ClearCompleteButton.AsElement(), "display:none")
+			SetInlineCSS(ClearCompleteButton.AsElement(), "display:none")
 		} else {
-			doc.SetInlineCSS(ClearCompleteButton.AsElement(), "display:block")
+			SetInlineCSS(ClearCompleteButton.AsElement(), "display:block")
 		}
 
 		if allcomplete {
-			ToggleAllInput.AsElement().SetUI("checked", ui.Bool(true))
+			ToggleAllInput.SetDataSetUI("checked", ui.Bool(true))
 		} else {
-			ToggleAllInput.AsElement().SetUI("checked", ui.Bool(false))
+			ToggleAllInput.SetDataSetUI("checked", ui.Bool(false))
 		}
-		return false
-	}))
-
-	AppSection.Watch("data", "checked", ToggleAllInput, ui.NewMutationHandler(func(evt ui.MutationEvent) bool {
-		status := evt.NewValue().(ui.Bool)
-
-		tlist := TodoListFromRef(TodosList)
-
-		tdl := tlist.GetList()
-		ntdl := tdl.MakeCopy()
-
-		for i, todo := range tdl.UnsafelyUnwrap() {
-			t := todo.(Todo)
-			t = t.MakeCopy().Set("completed", status).Commit()
-			ntdl.Set(i, t)
-		}
-		tlist.SetList(ntdl.Commit())
-
 		return false
 	}))
 
@@ -216,9 +219,9 @@ func App() *doc.Document {
 		tlist := TodoListFromRef(TodosList)
 		tdl := tlist.GetList()
 		if len(tdl.UnsafelyUnwrap()) == 0 {
-			doc.SetInlineCSS(MainFooter.AsElement(), "display : none")
+			SetInlineCSS(MainFooter.AsElement(), "display : none")
 		} else {
-			doc.SetInlineCSS(MainFooter.AsElement(), "display : block")
+			SetInlineCSS(MainFooter.AsElement(), "display : block")
 		}
 		return false
 	}).RunASAP())
@@ -232,9 +235,9 @@ func App() *doc.Document {
 		tlist := TodoListFromRef(TodosList)
 		tdl := tlist.GetList()
 		if len(tdl.UnsafelyUnwrap()) == 0 {
-			doc.SetInlineCSS(MainSection.AsElement(), "display : none")
+			SetInlineCSS(MainSection.AsElement(), "display : none")
 		} else {
-			doc.SetInlineCSS(MainSection.AsElement(), "display : block")
+			SetInlineCSS(MainSection.AsElement(), "display : block")
 		}
 		return false
 	}).RunASAP())
@@ -244,6 +247,6 @@ func App() *doc.Document {
 }
 
 func main() {
-	ListenAndServe := doc.NewBuilder(App)
+	ListenAndServe := NewBuilder(App)
 	ListenAndServe(nil)
 }

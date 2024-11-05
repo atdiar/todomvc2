@@ -6,8 +6,7 @@ import (
 	"time"
 
 	ui "github.com/atdiar/particleui"
-	doc "github.com/atdiar/particleui/drivers/js"
-	. "github.com/atdiar/particleui/drivers/js/declarative"
+	. "github.com/atdiar/particleui/drivers/js"
 )
 
 func newIDgenerator(charlen int, seed int64) func() string {
@@ -27,10 +26,11 @@ var NewID func() string
 
 func init() {
 	var seed int64
-	if doc.HMRMode != "false" || doc.SSRMode != "false" {
+	if HMRMode != "false" || SSRMode != "false" {
 		seed = 7823949678145108
-		print("HMRMode or SSRMode is enabled. Using fixed seed for id generation") // DEBUG
+		DEBUG(HMRMode, SSRMode, "HMRMode or SSRMode is enabled. Using fixed seed for id generation") // DEBUG
 	} else {
+		DEBUG("seeding id generator with time") // DEBUG
 		seed = time.Now().UnixNano()
 	}
 
@@ -51,7 +51,7 @@ type TodoElement struct {
 	*ui.Element
 }
 
-func FindTodoElement(d *doc.Document, t Todo) (TodoElement, bool) {
+func FindTodoElement(d *Document, t Todo) (TodoElement, bool) {
 	todoid, ok := t.Get("id")
 	if !ok {
 		panic("wrong todo format! id is required")
@@ -68,7 +68,7 @@ func FindTodoElement(d *doc.Document, t Todo) (TodoElement, bool) {
 	return TodoElement{todo}, false
 }
 
-func newtodo(document *doc.Document, id string, options ...string) *ui.Element {
+func newtodo(document *Document, id string, options ...string) *ui.Element {
 
 	var li *ui.Element
 	var i *ui.Element
@@ -98,7 +98,7 @@ func newtodo(document *doc.Document, id string, options ...string) *ui.Element {
 	)
 
 	edit := document.Input.WithID(id+"-edit", "")
-	doc.AddClass(edit.AsElement(), "edit")
+	AddClass(edit.AsElement(), "edit")
 
 	edit.AsElement().ShareLifetimeOf(li.AsElement())
 
@@ -113,7 +113,7 @@ func newtodo(document *doc.Document, id string, options ...string) *ui.Element {
 			return false
 		}
 
-		doc.LabelElement{l}.SetText(string(titlestr))
+		LabelElement{l}.SetText(string(titlestr))
 		edit.SetUI("value", titlestr)
 
 		todocomplete, ok := t.Get("completed")
@@ -123,9 +123,9 @@ func newtodo(document *doc.Document, id string, options ...string) *ui.Element {
 		todocompletebool := todocomplete.(ui.Bool)
 
 		if todocompletebool {
-			doc.AddClass(li.AsElement(), "completed")
+			AddClass(li.AsElement(), "completed")
 		} else {
-			doc.RemoveClass(li.AsElement(), "completed")
+			RemoveClass(li.AsElement(), "completed")
 		}
 
 		i.SetUI("checked", todocompletebool)
@@ -162,11 +162,11 @@ func newtodo(document *doc.Document, id string, options ...string) *ui.Element {
 		m := evt.NewValue().(ui.Bool)
 
 		if m {
-			doc.AddClass(li.AsElement(), "editing")
+			AddClass(li.AsElement(), "editing")
 			li.AsElement().AppendChild(edit.AsElement())
 			edit.Focus()
 		} else {
-			doc.RemoveClass(li.AsElement(), "editing")
+			RemoveClass(li.AsElement(), "editing")
 			li.AsElement().RemoveChild(edit.AsElement())
 		}
 
@@ -273,7 +273,7 @@ func newtodo(document *doc.Document, id string, options ...string) *ui.Element {
 
 }
 
-func newTodoElement(d *doc.Document, t Todo) TodoElement {
+func newTodoElement(d *Document, t Todo) TodoElement {
 	todoid, ok := t.Get("id")
 	if !ok {
 		panic("missing todo id")
