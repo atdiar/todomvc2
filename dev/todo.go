@@ -28,9 +28,9 @@ func init() {
 	var seed int64
 	if HMRMode != "false" || SSRMode != "false" {
 		seed = 7823949678145108
-		DEBUG(HMRMode, SSRMode, "HMRMode or SSRMode is enabled. Using fixed seed for id generation") // DEBUG
+		//DEBUG(HMRMode, SSRMode, "HMRMode or SSRMode is enabled. Using fixed seed for id generation") // DEBUG
 	} else {
-		DEBUG("seeding id generator with time") // DEBUG
+		//DEBUG("seeding id generator with time") // DEBUG
 		seed = time.Now().UnixNano()
 	}
 

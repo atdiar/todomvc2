@@ -49,8 +49,8 @@ func App() *Document {
 
 	document.Head().AppendChild(
 		E(document.Link.WithID("todocss").
-			SetAttribute("rel", "stylesheet").
-			SetAttribute("href", "/assets/css/todomvc.css"),
+			SetRel("stylesheet").
+			SetHref("./assets/css/todomvc.css"),
 		),
 	)
 
@@ -83,7 +83,7 @@ func App() *Document {
 							E(document.Label().For(&ToggleAllInput)),
 							E(NewTodoList(document, "todo-list", EnableLocalPersistence()),
 								Ref(&TodosList),
-								InitRouter(Hijack("/", "/all")),
+								InitRouter(Hijack("/", "/all"), ui.TrailingSlashMatters),
 							),
 						),
 					),
@@ -107,7 +107,7 @@ func App() *Document {
 					E(document.Paragraph().SetText("Double-click to edit a todo")),
 					E(document.Paragraph().SetText("Created with: "),
 						Children(
-							E(document.Anchor().SetHREF("https://zui.dev").SetText("zui")),
+							E(document.Anchor().SetHref("https://zui.dev").SetText("zui")),
 						),
 					),
 				),
