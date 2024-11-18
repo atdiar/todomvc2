@@ -199,8 +199,7 @@ func App() *Document {
 		var itemsleft = len(l.UnsafelyUnwrap()) - countcomplete
 		tc.SetCount(itemsleft)
 
-		if itemsleft > 0 {
-			allcomplete = false
+		if countcomplete == 0 {
 			SetInlineCSS(ClearCompleteButton.AsElement(), "display:none")
 		} else {
 			SetInlineCSS(ClearCompleteButton.AsElement(), "display:block")
