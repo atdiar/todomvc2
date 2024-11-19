@@ -101,19 +101,21 @@ func newTodoListElement(document *doc.Document, id string, options ...string) *E
 	}))
 
 	tview.OnActivated("all", NewMutationHandler(func(evt MutationEvent) bool {
-		evt.Origin().SetDataSetUI("filter", String("all"))
+		evt.Origin().SetUI("filter", String("all"))
 		doc.GetDocument(evt.Origin()).Window().SetTitle("TODOMVC-all")
+		//evt.Origin().TriggerEvent("renderlist")
 		return false
 	}))
 	tview.OnActivated("active", NewMutationHandler(func(evt MutationEvent) bool {
-		evt.Origin().SetDataSetUI("filter", String("active"))
+		evt.Origin().SetUI("filter", String("active"))
 		doc.GetDocument(evt.Origin()).Window().SetTitle("TODOMVC-active")
-
+		//evt.Origin().TriggerEvent("renderlist")
 		return false
 	}))
 	tview.OnActivated("completed", NewMutationHandler(func(evt MutationEvent) bool {
-		evt.Origin().SetDataSetUI("filter", String("completed"))
+		evt.Origin().SetUI("filter", String("completed"))
 		doc.GetDocument(evt.Origin()).Window().SetTitle("TODOMVC-completed")
+		//evt.Origin().TriggerEvent("renderlist")
 		return false
 	}))
 
