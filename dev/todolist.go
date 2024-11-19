@@ -95,7 +95,6 @@ func newTodoListElement(document *doc.Document, id string, options ...string) *E
 			}
 		}
 
-		//TodosListElement{evt.Origin()}.signalUpdate()
 		evt.Origin().TriggerEvent("renderlist")
 		return false
 	}))
@@ -155,7 +154,6 @@ func newTodoListElement(document *doc.Document, id string, options ...string) *E
 		})
 
 		t.SetChildren(newChildren...)
-
 		return false
 	}))
 
