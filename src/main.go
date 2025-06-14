@@ -50,7 +50,7 @@ func App() *Document {
 	document.Head().AppendChild(
 		E(document.Link.WithID("todocss").
 			SetRel("stylesheet").
-			SetHref("./assets/css/todomvc.css"),
+			SetHref("./assets/styles/todomvc.css"),
 		),
 	)
 
