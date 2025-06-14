@@ -1,7 +1,5 @@
 {
-  "host": "localhost",
   "platform": "web",
-  "port": "8888",
   "projectName": "github.com/atdiar/todomvc2",
   "web": ""
 }

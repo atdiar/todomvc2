@@ -1,0 +1,18 @@
+# Build directories
+/bin/tmp/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE specific
+.idea/
+.vscode/
+*.sublime-*
+
+# Go specific
+*.exe
+*.test
+*.prof
